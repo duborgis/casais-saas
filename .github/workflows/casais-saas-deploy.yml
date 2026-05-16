@@ -1,0 +1,41 @@
+name: Deploy Casais SaaS
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - 'casais-saas/**'
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # Build Backend
+      - name: Build and push Backend
+        uses: docker/build-push-action@v6
+        with:
+          context: ./casais-saas/backend
+          push: true
+          tags: ghcr.io/${{ github.repository }}/casais-backend:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # Em um cenário real, você faria o deploy via SSH aqui similar ao agent-sse-backend
+      - name: Deploy Announcement
+        run: echo "Imagens prontas no GHCR. Próximo passo: SSH Deploy."
