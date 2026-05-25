@@ -19,7 +19,7 @@ const io = new Server(server, {
 app.use(cors());
 app.use(express.json());
 
-const AGENT_BACKEND_URL = process.env.AGENT_BACKEND_URL || 'http://localhost:3000';
+const AGENT_BACKEND_URL = process.env.AGENT_BACKEND_URL || 'http://localhost:3005';
 const AGENT_API_KEY = process.env.AGENT_API_KEY || 'default-secret';
 const MEDIATOR_AGENT_ID = 'mediator-agent'; // Precisaremos criar este agente no backend-sse
 
