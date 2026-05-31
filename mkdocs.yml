@@ -1,0 +1,25 @@
+site_name: casais-saas
+theme:
+  name: material
+  palette:
+    scheme: slate
+    primary: deep purple
+    accent: pink
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - content.code.copy
+
+nav:
+  - Overview: index.md
+  - Getting Started: setup.md
+  - Architecture: architecture.md
+  - Mediation Guide: mediation.md
+
+markdown_extensions:
+  - admonition
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
