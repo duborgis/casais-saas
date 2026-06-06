@@ -52,15 +52,16 @@ jobs:
           echo "Payload: $PAYLOAD"
           echo "---"
 
-          RESPONSE=$(aws bedrock-agentcore invoke-agent-runtime \
+          echo "$PAYLOAD" > /tmp/payload.json
+
+          aws bedrock-agentcore invoke-agent-runtime \
             --agent-runtime-arn "$ORCH_ARN" \
             --qualifier DEFAULT \
-            --content-type application/json \
-            --accept application/json \
-            --request-body "$PAYLOAD" \
+            --content-type "application/json" \
+            --accept "application/json" \
+            --payload file:///tmp/payload.json \
             --region $AWS_REGION \
-            --output text \
-            --query 'body' 2>&1 || echo "INVOKE_ERROR: $?")
+            /tmp/response.json 2>&1 && echo "Invoke OK" || echo "Invoke failed with code $?"
 
           echo "Response:"
-          echo "$RESPONSE"
+          cat /tmp/response.json 2>/dev/null || echo "(no response file)"
