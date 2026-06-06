@@ -1,0 +1,66 @@
+name: Test Harmonia Orchestrator
+
+on:
+  workflow_dispatch:
+    inputs:
+      message:
+        description: "Mensagem para o agente"
+        required: false
+        default: "Oi! Estamos tendo dificuldades para nos comunicar de forma saudável. Às vezes uma conversa vira briga. Como podemos melhorar isso?"
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Test Orchestrator Invoke
+    runs-on: ubuntu-latest
+    environment: prod
+
+    env:
+      AWS_REGION: us-east-1
+
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Invoke Harmonia Orchestrator
+        run: |
+          ORCH_ARN=$(aws ssm get-parameter \
+            --name "/casais-saas/agents/orchestrator-arn" \
+            --query "Parameter.Value" \
+            --output text \
+            --region $AWS_REGION)
+
+          echo "Orchestrator ARN: $ORCH_ARN"
+
+          PAYLOAD=$(jq -cn \
+            --arg msg "${{ inputs.message || 'Oi! Estamos tendo dificuldades para nos comunicar de forma saudável. Às vezes uma conversa vira briga. Como podemos melhorar isso?' }}" \
+            '{
+              sessionId: "test-session-001",
+              input: {
+                text: $msg,
+                userId: "test-user",
+                agentId: "orchestrator"
+              }
+            }')
+
+          echo "Payload: $PAYLOAD"
+          echo "---"
+
+          RESPONSE=$(aws bedrock-agentcore invoke-agent-runtime \
+            --agent-runtime-arn "$ORCH_ARN" \
+            --qualifier DEFAULT \
+            --content-type application/json \
+            --accept application/json \
+            --request-body "$PAYLOAD" \
+            --region $AWS_REGION \
+            --output text \
+            --query 'body' 2>&1 || echo "INVOKE_ERROR: $?")
+
+          echo "Response:"
+          echo "$RESPONSE"
