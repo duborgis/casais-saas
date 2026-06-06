@@ -28,40 +28,54 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install boto3
+        run: pip install boto3 --quiet
+
       - name: Invoke Harmonia Orchestrator
         run: |
-          ORCH_ARN=$(aws ssm get-parameter \
-            --name "/casais-saas/agents/orchestrator-arn" \
-            --query "Parameter.Value" \
-            --output text \
-            --region $AWS_REGION)
+          python3 - <<'PYEOF'
+          import boto3, json, sys
 
-          echo "Orchestrator ARN: $ORCH_ARN"
+          region = "us-east-1"
+          ssm = boto3.client("ssm", region_name=region)
+          orch_arn = ssm.get_parameter(Name="/casais-saas/agents/orchestrator-arn")["Parameter"]["Value"]
+          print(f"Orchestrator ARN: {orch_arn}")
 
-          PAYLOAD=$(jq -cn \
-            --arg msg "${{ inputs.message || 'Oi! Estamos tendo dificuldades para nos comunicar de forma saudável. Às vezes uma conversa vira briga. Como podemos melhorar isso?' }}" \
-            '{
-              sessionId: "test-session-001",
-              input: {
-                text: $msg,
-                userId: "test-user",
-                agentId: "orchestrator"
+          msg = "${{ inputs.message || 'Oi, estamos tendo dificuldades para nos comunicar. Como podemos melhorar?' }}"
+          payload = {
+              "sessionId": "test-session-001",
+              "input": {
+                  "text": msg,
+                  "userId": "test-user",
+                  "agentId": "orchestrator",
               }
-            }')
+          }
+          print(f"Message: {msg}")
+          print("---")
 
-          echo "Payload: $PAYLOAD"
-          echo "---"
+          client = boto3.client("bedrock-agentcore", region_name=region)
+          response = client.invoke_agent_runtime(
+              agentRuntimeArn=orch_arn,
+              qualifier="DEFAULT",
+              contentType="application/json",
+              accept="application/json",
+              payload=json.dumps(payload).encode("utf-8"),
+          )
 
-          echo "$PAYLOAD" > /tmp/payload.json
+          body = response["response"].read().decode("utf-8")
+          print("Raw response body:")
+          print(body[:2000])
 
-          aws bedrock-agentcore invoke-agent-runtime \
-            --agent-runtime-arn "$ORCH_ARN" \
-            --qualifier DEFAULT \
-            --content-type "application/json" \
-            --accept "application/json" \
-            --payload file:///tmp/payload.json \
-            --region $AWS_REGION \
-            /tmp/response.json 2>&1 && echo "Invoke OK" || echo "Invoke failed with code $?"
-
-          echo "Response:"
-          cat /tmp/response.json 2>/dev/null || echo "(no response file)"
+          try:
+              parsed = json.loads(body)
+              text = parsed.get("output", {}).get("text", "") or str(parsed)
+              print("\nAgent response:")
+              print(text)
+          except Exception as e:
+              print(f"Parse error: {e}")
+          PYEOF
