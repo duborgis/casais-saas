@@ -1,0 +1,68 @@
+name: Upload KB Content to S3
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - "knowledge_base/**"
+
+permissions:
+  contents: read
+
+jobs:
+  upload:
+    name: Upload KB to S3 and trigger ingestion
+    runs-on: ubuntu-latest
+    environment: prod
+
+    env:
+      AWS_REGION: us-east-1
+      S3_BUCKET: borginho-bucket-bleqtech-uuid-23jek2
+      S3_PREFIX: knowledge-base/casais
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Upload KB files to S3
+        run: |
+          aws s3 sync knowledge_base/ s3://$S3_BUCKET/$S3_PREFIX/ \
+            --delete \
+            --region $AWS_REGION
+          echo "Uploaded KB files:"
+          aws s3 ls s3://$S3_BUCKET/$S3_PREFIX/ --recursive
+
+      - name: Trigger Bedrock KB ingestion
+        run: |
+          KB_ID=$(aws ssm get-parameter \
+            --name "/bedrock-kb/casais-id" \
+            --query "Parameter.Value" \
+            --output text \
+            --region $AWS_REGION)
+
+          DS_ID=$(aws ssm get-parameter \
+            --name "/bedrock-kb/casais-ds-id" \
+            --query "Parameter.Value" \
+            --output text \
+            --region $AWS_REGION)
+
+          echo "KB ID: $KB_ID"
+          echo "DS ID: $DS_ID"
+
+          JOB=$(aws bedrock-agent start-ingestion-job \
+            --knowledge-base-id "$KB_ID" \
+            --data-source-id "$DS_ID" \
+            --region $AWS_REGION \
+            --query 'ingestionJob.ingestionJobId' \
+            --output text)
+
+          echo "Ingestion job started: $JOB"
