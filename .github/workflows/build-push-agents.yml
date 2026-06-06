@@ -55,27 +55,3 @@ jobs:
           tags: |
             ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ steps.meta.outputs.tag }}
             ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:latest
-
-  deploy:
-    name: Trigger AgentCore Terraform Deploy
-    runs-on: ubuntu-latest
-    needs: build
-    environment: prod
-    if: ${{ secrets.INFRA_REPO_TOKEN != '' }}
-
-    steps:
-      - name: Trigger terraform-casais-agents-apply in aws-terraform
-        uses: actions/github-script@v7
-        with:
-          github-token: ${{ secrets.INFRA_REPO_TOKEN }}
-          script: |
-            await github.rest.actions.createWorkflowDispatch({
-              owner: context.repo.owner,
-              repo: 'aws-terraform',
-              workflow_id: 'terraform-casais-agents-apply.yml',
-              ref: 'main',
-              inputs: {
-                image_tag: '${{ needs.build.outputs.image_tag }}'
-              }
-            });
-            console.log('Triggered terraform-casais-agents-apply.yml with tag ${{ needs.build.outputs.image_tag }}');
