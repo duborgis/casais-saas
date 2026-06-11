@@ -62,6 +62,16 @@ jobs:
             --name /casais-saas/ec2/instance-id \
             --query 'Parameter.Value' --output text)
 
+          # Wait for the SSM agent to register (fresh instances take a few minutes)
+          for i in $(seq 1 20); do
+            PING=$(aws ssm describe-instance-information \
+              --filters "Key=InstanceIds,Values=$INSTANCE_ID" \
+              --query 'InstanceInformationList[0].PingStatus' --output text 2>/dev/null || echo None)
+            [ "$PING" = "Online" ] && break
+            echo "SSM agent not online yet ($PING), retry $i/20"
+            sleep 15
+          done
+
           COMMAND_ID=$(aws ssm send-command \
             --instance-ids "$INSTANCE_ID" \
             --document-name AWS-RunShellScript \
