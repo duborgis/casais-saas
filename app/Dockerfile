@@ -1,4 +1,4 @@
-FROM golang:1.23-alpine AS build
+FROM golang:1.25-alpine AS build
 
 WORKDIR /src
 
@@ -10,7 +10,8 @@ RUN CGO_ENABLED=0 go build -ldflags="-s -w" -o /harmonia .
 
 FROM alpine:3.21
 
-RUN apk add --no-cache ca-certificates && adduser -D -u 1000 harmonia
+RUN apk add --no-cache ca-certificates && adduser -D -u 1000 harmonia \
+    && mkdir -p /data && chown harmonia /data
 USER harmonia
 
 COPY --from=build /harmonia /usr/local/bin/harmonia

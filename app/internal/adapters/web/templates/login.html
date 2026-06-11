@@ -21,10 +21,10 @@
       <form method="POST" action="/login"
             class="bg-white rounded-3xl shadow-xl shadow-rose-900/5 border border-rose-100/30 p-8 space-y-5">
         <div>
-          <label class="block text-xs font-bold text-slate-500 tracking-widest uppercase mb-2">Usuário</label>
+          <label class="block text-xs font-bold text-slate-500 tracking-widest uppercase mb-2">E-mail</label>
           <div class="relative">
-            <svg class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-            <input type="text" name="username" placeholder="seu usuário" autocomplete="username" required
+            <svg class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+            <input type="text" name="email" placeholder="voce@email.com" autocomplete="username" required
                    class="w-full bg-slate-50 border border-rose-100/50 rounded-2xl pl-11 pr-4 py-3.5 focus:outline-none focus:ring-4 focus:ring-rose-500/10 focus:border-rose-300 transition-all text-slate-800 font-medium placeholder:text-slate-300" />
           </div>
         </div>
@@ -47,6 +47,11 @@
           <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" x2="3" y1="12" y2="12"/></svg>
           Entrar
         </button>
+
+        <p class="text-center text-xs text-slate-400 font-medium">
+          Ainda não tem conta?
+          <a href="/signup" class="text-rose-500 font-bold hover:text-rose-600 transition-colors">Criar conta grátis</a>
+        </p>
       </form>
 
       <p class="text-center text-[10px] text-slate-300 font-medium mt-6">

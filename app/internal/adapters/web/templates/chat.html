@@ -26,10 +26,7 @@
         </div>
       </div>
       <div class="flex items-center gap-3">
-        <div class="hidden sm:flex items-center gap-2 bg-emerald-50 px-4 py-2 rounded-2xl border border-emerald-100/50">
-          <svg class="text-emerald-500 w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg>
-          <span class="text-[10px] font-bold text-emerald-700 tracking-widest uppercase">Encriptado</span>
-        </div>
+        {{template "quota_pill.html" .Pill}}
         <form method="POST" action="/logout" class="m-0">
           <button type="submit" title="Sair"
                   class="text-slate-300 hover:text-rose-400 transition-colors p-2">
@@ -45,7 +42,7 @@
         <div id="messages" class="space-y-6">
           <div class="flex justify-start">
             <div class="max-w-[85%] px-6 py-4 rounded-[2rem] shadow-sm bg-slate-50 text-slate-700 rounded-tl-none border border-slate-100">
-              <p class="text-[0.95rem] leading-relaxed font-medium m-0 whitespace-pre-wrap">Olá! Sou o Harmony, seu mediador inteligente. Como posso ajudar vocês hoje?</p>
+              <p class="text-[0.95rem] leading-relaxed font-medium m-0 whitespace-pre-wrap">Olá{{if .User.Name}}, {{.User.Name}}{{end}}! Sou o Harmony, seu mediador inteligente. Como posso ajudar vocês hoje?</p>
             </div>
           </div>
         </div>
@@ -93,6 +90,9 @@
     </footer>
   </div>
 
+  <!-- freemium modal container (filled via htmx out-of-band swaps) -->
+  <div id="modal"></div>
+
   <script>
     const form = document.getElementById('chat-form');
     const messages = document.getElementById('messages');
@@ -100,6 +100,30 @@
 
     function scrollToBottom() {
       scrollArea.scrollTop = scrollArea.scrollHeight;
+    }
+
+    function closeModal() {
+      document.getElementById('modal').replaceChildren();
+    }
+
+    // mock rewarded video: countdown before the claim button unlocks
+    function runAdCountdown(seconds) {
+      const label = document.getElementById('ad-countdown');
+      const claim = document.getElementById('ad-claim');
+      const bar = document.getElementById('ad-progress');
+      let left = seconds;
+      label.textContent = `Aguarde ${left}s…`;
+      requestAnimationFrame(() => { bar.style.transitionDuration = seconds + 's'; bar.style.width = '100%'; });
+      const t = setInterval(() => {
+        left--;
+        if (left <= 0) {
+          clearInterval(t);
+          label.textContent = 'Recompensa liberada!';
+          claim.disabled = false;
+        } else {
+          label.textContent = `Aguarde ${left}s…`;
+        }
+      }, 1000);
     }
 
     // Mostra a bolha do usuário imediatamente (a resposta do agente vem via htmx)
@@ -120,9 +144,10 @@
       scrollToBottom();
     });
 
-    form.addEventListener('htmx:afterRequest', () => {
+    document.body.addEventListener('htmx:afterRequest', () => {
       scrollToBottom();
-      form.querySelector('input[name=message]').focus();
+      const input = form.querySelector('input[name=message]');
+      if (!input.disabled) input.focus();
     });
   </script>
 </body>
