@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Harmony — Mediação Inteligente</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23f43f5e'><path d='M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z'/></svg>" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/htmx.org@2.0.4" crossorigin="anonymous"></script>
+  <style>
+    #typing { display: none; }
+    #typing.htmx-request { display: flex; }
+  </style>
+</head>
+<body>
+  <div class="min-h-screen bg-[#fdfaf5] flex flex-col items-center p-4 font-sans">
+    <!-- Header -->
+    <header class="w-full max-w-2xl bg-white/80 backdrop-blur-md rounded-3xl shadow-sm p-6 mb-8 flex items-center justify-between border border-orange-100/50">
+      <div class="flex items-center gap-4">
+        <div class="bg-gradient-to-br from-rose-400 to-orange-300 p-3 rounded-2xl shadow-rose-200/50 shadow-lg text-white">
+          <svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+        </div>
+        <div>
+          <h1 class="text-2xl font-black text-slate-800 tracking-tight leading-none m-0">Harmony</h1>
+          <p class="text-sm font-medium text-rose-400/80 mt-1 m-0 italic">Mediacao Inteligente</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-3">
+        <div class="hidden sm:flex items-center gap-2 bg-emerald-50 px-4 py-2 rounded-2xl border border-emerald-100/50">
+          <svg class="text-emerald-500 w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg>
+          <span class="text-[10px] font-bold text-emerald-700 tracking-widest uppercase">Encriptado</span>
+        </div>
+        <form method="POST" action="/logout" class="m-0">
+          <button type="submit" title="Sair"
+                  class="text-slate-300 hover:text-rose-400 transition-colors p-2">
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>
+          </button>
+        </form>
+      </div>
+    </header>
+
+    <!-- Chat Area -->
+    <main class="w-full max-w-2xl bg-white rounded-[2.5rem] shadow-xl shadow-rose-900/5 border border-rose-100/30 flex-1 flex flex-col overflow-hidden mb-6 min-h-[550px]">
+      <div id="scroll-area" class="flex-1 overflow-y-auto p-8 scroll-smooth">
+        <div id="messages" class="space-y-6">
+          <div class="flex justify-start">
+            <div class="max-w-[85%] px-6 py-4 rounded-[2rem] shadow-sm bg-slate-50 text-slate-700 rounded-tl-none border border-slate-100">
+              <p class="text-[0.95rem] leading-relaxed font-medium m-0 whitespace-pre-wrap">Olá! Sou o Harmony, seu mediador inteligente. Como posso ajudar vocês hoje?</p>
+            </div>
+          </div>
+        </div>
+        <div id="typing" class="justify-start mt-6">
+          <div class="bg-slate-50 px-5 py-3 rounded-[1.5rem] rounded-tl-none border border-slate-100 flex items-center gap-2">
+            <div class="flex gap-1">
+              <span class="w-1.5 h-1.5 bg-rose-400 rounded-full animate-bounce [animation-delay:-0.3s]"></span>
+              <span class="w-1.5 h-1.5 bg-rose-400 rounded-full animate-bounce [animation-delay:-0.15s]"></span>
+              <span class="w-1.5 h-1.5 bg-rose-400 rounded-full animate-bounce"></span>
+            </div>
+            <span class="text-[10px] font-bold text-slate-400 tracking-wider uppercase">Harmony ouvindo...</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Input -->
+      <form id="chat-form"
+            hx-post="/chat"
+            hx-target="#messages"
+            hx-swap="beforeend"
+            hx-indicator="#typing"
+            hx-disabled-elt="find input, find button"
+            class="p-6 bg-slate-50/50 border-t border-rose-50 flex items-center gap-4 m-0">
+        <div class="flex-1 relative group">
+          <input type="text" name="message" autocomplete="off" required
+                 placeholder="O que esta em seu coracao?"
+                 class="w-full bg-white border border-rose-100/50 rounded-2xl px-6 py-4 focus:outline-none focus:ring-4 focus:ring-rose-500/10 focus:border-rose-300 transition-all text-slate-800 placeholder:text-slate-300 font-medium disabled:opacity-50" />
+        </div>
+        <button type="submit"
+                class="bg-rose-500 hover:bg-rose-600 disabled:bg-slate-200 text-white p-4 rounded-2xl shadow-lg shadow-rose-200 transition-all hover:scale-105 active:scale-95 disabled:shadow-none">
+          <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z"/><path d="m21.854 2.147-10.94 10.939"/></svg>
+        </button>
+      </form>
+    </main>
+
+    <!-- Footer -->
+    <footer class="w-full max-w-2xl flex flex-col items-center gap-2 pb-8">
+      <div class="flex items-center gap-3 bg-white px-5 py-2 rounded-full shadow-sm border border-rose-50/50">
+        <svg class="w-4 h-4 text-orange-400" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/></svg>
+        <span class="text-[10px] font-black text-slate-400 tracking-[0.2em] uppercase">IA de Conexao Humana</span>
+      </div>
+      <p class="text-[10px] text-slate-300 font-medium text-center max-w-xs mt-2 leading-relaxed">
+        Harmony utiliza inteligencia artificial de ultima geracao para facilitar a comunicacao nao-violenta entre parceiros.
+      </p>
+    </footer>
+  </div>
+
+  <script>
+    const form = document.getElementById('chat-form');
+    const messages = document.getElementById('messages');
+    const scrollArea = document.getElementById('scroll-area');
+
+    function scrollToBottom() {
+      scrollArea.scrollTop = scrollArea.scrollHeight;
+    }
+
+    // Mostra a bolha do usuário imediatamente (a resposta do agente vem via htmx)
+    form.addEventListener('htmx:configRequest', (e) => {
+      const text = e.detail.parameters.message;
+      if (!text) return;
+      const wrap = document.createElement('div');
+      wrap.className = 'flex justify-end';
+      const bubble = document.createElement('div');
+      bubble.className = 'max-w-[85%] px-6 py-4 rounded-[2rem] shadow-sm bg-gradient-to-br from-rose-500 to-rose-600 text-white rounded-tr-none';
+      const p = document.createElement('p');
+      p.className = 'text-[0.95rem] leading-relaxed font-medium m-0 whitespace-pre-wrap';
+      p.textContent = text;
+      bubble.appendChild(p);
+      wrap.appendChild(bubble);
+      messages.appendChild(wrap);
+      form.reset();
+      scrollToBottom();
+    });
+
+    form.addEventListener('htmx:afterRequest', () => {
+      scrollToBottom();
+      form.querySelector('input[name=message]').focus();
+    });
+  </script>
+</body>
+</html>
