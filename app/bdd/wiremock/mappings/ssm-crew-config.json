@@ -1,0 +1,24 @@
+{
+  "name": "SSM GetParameter — crew config",
+  "request": {
+    "method": "POST",
+    "urlPath": "/",
+    "headers": {
+      "X-Amz-Target": { "equalTo": "AmazonSSM.GetParameter" }
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": { "Content-Type": "application/x-amz-json-1.1" },
+    "jsonBody": {
+      "Parameter": {
+        "Name": "/casais-saas/agents/crew-config",
+        "Type": "String",
+        "Value": "{\"agents\":[{\"id\":\"orchestrator\",\"name\":\"Valentina\"}]}",
+        "Version": 1,
+        "ARN": "arn:aws:ssm:us-east-1:000000000000:parameter/casais-saas/agents/crew-config",
+        "DataType": "text"
+      }
+    }
+  }
+}

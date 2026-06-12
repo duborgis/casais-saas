@@ -24,7 +24,8 @@ Before implementing any significant change, you MUST investigate and ask clarify
 - **Run dev**: `cd app && go run .` (port 8080; needs `ORCHESTRATOR_ARN` + AWS creds for chat)
 
 ## Test Commands
-- **App**: `cd app && go test ./...` (core services tested with in-memory fakes)
+- **App (unit)**: `cd app && go test ./internal/...` (core services tested with in-memory fakes)
+- **BDD (Godog)**: `app/bdd/run.sh` — sobe docker compose (WireMock como AWS via `AWS_ENDPOINT_URL` + nginx reverse proxy + app) e roda os cenários Gherkin de `app/bdd/features/` contra o stack real. Roda no CI antes do build/deploy. `go test ./bdd` sozinho é skip sem `BDD_BASE_URL`.
 - **Local run without AWS**: `cd app && MOCK_AGENT=1 DB_PATH=/tmp/h.db go run .`
 
 ## Lint/Format Commands

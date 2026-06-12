@@ -13,8 +13,29 @@ env:
   IMAGE: ghcr.io/${{ github.repository }}/app
 
 jobs:
+  bdd:
+    name: BDD (Godog)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: app/go.mod
+          cache-dependency-path: app/go.sum
+
+      - name: Unit tests
+        working-directory: app
+        run: go vet ./... && go test ./internal/...
+
+      - name: Acceptance suite (compose: wiremock + app + nginx)
+        run: app/bdd/run.sh
+
   build:
     name: Build & Push
+    needs: bdd
     runs-on: ubuntu-latest
     permissions:
       contents: read

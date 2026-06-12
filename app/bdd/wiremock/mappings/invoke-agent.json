@@ -1,0 +1,17 @@
+{
+  "name": "AgentCore InvokeAgentRuntime — resposta da orquestradora",
+  "request": {
+    "method": "POST",
+    "urlPathPattern": "/runtimes/.+/invocations"
+  },
+  "response": {
+    "status": 200,
+    "fixedDelayMilliseconds": 150,
+    "headers": { "Content-Type": "application/json" },
+    "jsonBody": {
+      "output": {
+        "text": "Olá! Aqui é a Valentina 💜 (resposta simulada pelo WireMock). Como posso ajudar vocês hoje?"
+      }
+    }
+  }
+}
