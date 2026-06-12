@@ -30,7 +30,7 @@ jobs:
         working-directory: app
         run: go vet ./... && go test ./internal/...
 
-      - name: Acceptance suite (compose: wiremock + app + nginx)
+      - name: Acceptance suite (compose com wiremock + app + nginx)
         run: app/bdd/run.sh
 
   build:
