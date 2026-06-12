@@ -45,6 +45,21 @@
               <p class="text-[0.95rem] leading-relaxed font-medium m-0 whitespace-pre-wrap">Olá{{if .User.Name}}, {{.User.Name}}{{end}}! Sou o Harmony, seu mediador inteligente. Como posso ajudar vocês hoje?</p>
             </div>
           </div>
+          {{range .Messages}}
+          {{if eq .Role "user"}}
+          <div class="flex justify-end">
+            <div class="max-w-[85%] px-6 py-4 rounded-[2rem] shadow-sm bg-gradient-to-br from-rose-500 to-rose-600 text-white rounded-tr-none">
+              <p class="text-[0.95rem] leading-relaxed font-medium m-0 whitespace-pre-wrap">{{.Content}}</p>
+            </div>
+          </div>
+          {{else}}
+          <div class="flex justify-start">
+            <div class="max-w-[85%] px-6 py-4 rounded-[2rem] shadow-sm bg-slate-50 text-slate-700 rounded-tl-none border border-slate-100">
+              <p class="text-[0.95rem] leading-relaxed font-medium m-0 whitespace-pre-wrap">{{.Content}}</p>
+            </div>
+          </div>
+          {{end}}
+          {{end}}
         </div>
         <div id="typing" class="justify-start mt-6">
           <div class="bg-slate-50 px-5 py-3 rounded-[1.5rem] rounded-tl-none border border-slate-100 flex items-center gap-2">

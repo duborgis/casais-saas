@@ -7,6 +7,9 @@ services:
     image: wiremock/wiremock:3.13.1
     volumes:
       - ./wiremock:/home/wiremock:ro
+    ports:
+      # admin API exposta para a suíte inspecionar o journal de requests
+      - "${BDD_WIREMOCK_PORT:-8090}:8080"
 
   app:
     build:

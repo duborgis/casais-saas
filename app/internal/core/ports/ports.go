@@ -32,7 +32,14 @@ type EventRepository interface {
 	CountByType(ctx context.Context) (map[domain.EventType]int, error)
 }
 
+// MessageRepository persists the chat history per user.
+type MessageRepository interface {
+	SaveMessage(ctx context.Context, m *domain.Message) error
+	// RecentMessages returns the last n messages in chronological order.
+	RecentMessages(ctx context.Context, userID string, n int) ([]domain.Message, error)
+}
+
 // AgentInvoker is the outbound port to the AI mediator.
 type AgentInvoker interface {
-	Invoke(ctx context.Context, text, agentSessionID string) (string, error)
+	Invoke(ctx context.Context, text, userID, agentSessionID string) (string, error)
 }

@@ -52,12 +52,23 @@ func (a *Invoker) getCrewConfig(ctx context.Context) json.RawMessage {
 	return a.crewConfig
 }
 
-func (a *Invoker) Invoke(ctx context.Context, text, agentSessionID string) (string, error) {
+// runtimeSessionID adapts our session ID to the AgentCore requirement of
+// at least 33 characters; it keeps requests of the same conversation on
+// the same runtime session (microVM), which is what gives the agent
+// short-term memory between messages.
+func runtimeSessionID(id string) string {
+	for len(id) < 33 {
+		id += "-harmonia"
+	}
+	return id
+}
+
+func (a *Invoker) Invoke(ctx context.Context, text, userID, agentSessionID string) (string, error) {
 	runID := service.NewID()
 
 	input := map[string]any{
 		"text":    text,
-		"userId":  "user-1",
+		"userId":  userID,
 		"agentId": "orchestrator",
 		"runtimeContext": map[string]any{
 			"runId":           runID,
@@ -81,11 +92,12 @@ func (a *Invoker) Invoke(ctx context.Context, text, agentSessionID string) (stri
 	log.Printf("[>] Invocando orquestrador | session=%s", agentSessionID)
 
 	out, err := a.agentClient.InvokeAgentRuntime(ctx, &bedrockagentcore.InvokeAgentRuntimeInput{
-		AgentRuntimeArn: aws.String(a.orchestratorARN),
-		Qualifier:       aws.String("DEFAULT"),
-		ContentType:     aws.String("application/json"),
-		Accept:          aws.String("application/json"),
-		Payload:         payload,
+		AgentRuntimeArn:  aws.String(a.orchestratorARN),
+		RuntimeSessionId: aws.String(runtimeSessionID(agentSessionID)),
+		Qualifier:        aws.String("DEFAULT"),
+		ContentType:      aws.String("application/json"),
+		Accept:           aws.String("application/json"),
+		Payload:          payload,
 	})
 	if err != nil {
 		return "", err
@@ -114,6 +126,6 @@ func (a *Invoker) Invoke(ctx context.Context, text, agentSessionID string) (stri
 // (MOCK_AGENT=1): canned reply, no AWS calls, no token cost.
 type Mock struct{}
 
-func (Mock) Invoke(_ context.Context, text, _ string) (string, error) {
+func (Mock) Invoke(_ context.Context, text, _, _ string) (string, error) {
 	return "(mock) Recebi sua mensagem: “" + text + "”. Em produção, quem responde é a Valentina, nossa orquestradora.", nil
 }

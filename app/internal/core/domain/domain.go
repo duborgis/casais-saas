@@ -78,8 +78,26 @@ func (s UsageStatus) Remaining() int {
 	return 0
 }
 
-func (s UsageStatus) CanSend() bool   { return s.Unlimited || s.Used < s.Limit }
+func (s UsageStatus) CanSend() bool    { return s.Unlimited || s.Used < s.Limit }
 func (s UsageStatus) CanWatchAd() bool { return !s.Unlimited && s.AdsWatched < s.MaxAds }
+
+// MessageRole identifies who authored a chat message.
+type MessageRole string
+
+const (
+	RoleUser  MessageRole = "user"
+	RoleAgent MessageRole = "agent"
+)
+
+// Message is one chat bubble, persisted so the conversation survives
+// page reloads and new sessions.
+type Message struct {
+	ID        int64
+	UserID    string
+	Role      MessageRole
+	Content   string
+	CreatedAt time.Time
+}
 
 // EventType labels funnel events used to validate the freemium model.
 type EventType string

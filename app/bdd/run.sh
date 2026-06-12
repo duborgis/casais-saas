@@ -5,6 +5,7 @@ set -euo pipefail
 cd "$(dirname "$0")"
 
 PORT="${BDD_PORT:-8089}"
+WM_PORT="${BDD_WIREMOCK_PORT:-8090}"
 
 cleanup() { docker compose down -v --remove-orphans >/dev/null 2>&1 || true; }
 trap cleanup EXIT
@@ -25,4 +26,6 @@ for i in $(seq 1 60); do
 done
 
 echo "[OK] Stack no ar — rodando Godog"
-BDD_BASE_URL="http://localhost:$PORT" go test -count=1 -v .
+BDD_BASE_URL="http://localhost:$PORT" \
+BDD_WIREMOCK_URL="http://localhost:$WM_PORT" \
+  go test -count=1 -v .

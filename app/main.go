@@ -22,6 +22,7 @@ import (
 	"harmonia/internal/core/service"
 )
 
+// envOr returns the value of an environment variable or a fallback string.
 func envOr(key, fallback string) string {
 	if v := os.Getenv(key); v != "" {
 		return v
@@ -29,6 +30,7 @@ func envOr(key, fallback string) string {
 	return fallback
 }
 
+// envInt returns the value of an environment variable as an integer or a fallback.
 func envInt(key string, fallback int) int {
 	if v := os.Getenv(key); v != "" {
 		if n, err := strconv.Atoi(v); err == nil {
@@ -80,7 +82,7 @@ func main() {
 			os.Getenv("ORCHESTRATOR_ARN"),
 			envOr("CREW_CONFIG_SSM_PATH", "/casais-saas/agents/crew-config"))
 	}
-	chat := service.NewChat(invoker, ent)
+	chat := service.NewChat(invoker, ent, store)
 
 	// ---- operator account (premium, also unlocks /metrics) ----
 	adminEmail := envOr("HARMONIA_USER", "harmonia")

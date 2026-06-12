@@ -117,7 +117,11 @@ func (s *Server) handleIndex(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "erro interno", http.StatusInternalServerError)
 		return
 	}
-	render(w, "chat.html", map[string]any{"User": u, "Pill": pill{Status: st}})
+	history, err := s.chat.History(r.Context(), u)
+	if err != nil {
+		log.Printf("[!] Erro ao carregar histórico (user=%s): %v", u.ID, err)
+	}
+	render(w, "chat.html", map[string]any{"User": u, "Pill": pill{Status: st}, "Messages": history})
 }
 
 func (s *Server) handleSignupPage(w http.ResponseWriter, r *http.Request) {

@@ -66,6 +66,14 @@ CREATE TABLE IF NOT EXISTS events (
   created_at TIMESTAMP NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_events_type ON events(type);
+CREATE TABLE IF NOT EXISTS messages (
+  id         INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id    TEXT NOT NULL,
+  role       TEXT NOT NULL,
+  content    TEXT NOT NULL,
+  created_at TIMESTAMP NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_messages_user ON messages(user_id, id);
 `)
 	return err
 }
@@ -160,6 +168,42 @@ func (s *Store) IncrementAds(ctx context.Context, userID, day string) error {
 INSERT INTO daily_usage (user_id, day, ads_watched) VALUES (?, ?, 1)
 ON CONFLICT (user_id, day) DO UPDATE SET ads_watched = ads_watched + 1`, userID, day)
 	return err
+}
+
+// ---- ports.MessageRepository ----
+
+func (s *Store) SaveMessage(ctx context.Context, m *domain.Message) error {
+	res, err := s.db.ExecContext(ctx,
+		`INSERT INTO messages (user_id, role, content, created_at) VALUES (?, ?, ?, ?)`,
+		m.UserID, string(m.Role), m.Content, m.CreatedAt)
+	if err != nil {
+		return err
+	}
+	m.ID, _ = res.LastInsertId()
+	return nil
+}
+
+func (s *Store) RecentMessages(ctx context.Context, userID string, n int) ([]domain.Message, error) {
+	rows, err := s.db.QueryContext(ctx, `
+SELECT id, user_id, role, content, created_at FROM (
+  SELECT id, user_id, role, content, created_at FROM messages
+  WHERE user_id = ? ORDER BY id DESC LIMIT ?
+) ORDER BY id ASC`, userID, n)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var out []domain.Message
+	for rows.Next() {
+		var m domain.Message
+		var role string
+		if err := rows.Scan(&m.ID, &m.UserID, &role, &m.Content, &m.CreatedAt); err != nil {
+			return nil, err
+		}
+		m.Role = domain.MessageRole(role)
+		out = append(out, m)
+	}
+	return out, rows.Err()
 }
 
 // ---- ports.EventRepository ----
