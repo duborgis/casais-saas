@@ -21,7 +21,8 @@ from fastapi.responses import JSONResponse, StreamingResponse
 from pydantic import BaseModel, Field, field_validator
 
 from config import AgentConfig, CrewConfig, RuntimeContext, Settings
-from service import AgentService
+from memory import CoupleMemory
+from service import AgentService, is_orchestrator
 
 settings = Settings()
 
@@ -43,6 +44,7 @@ _trace_id_var: ContextVar[str] = ContextVar("trace_id", default="")
 # ── Pydantic models ──────────────────────────────────────────────────────────
 
 class RuntimeContextInput(BaseModel):
+    """Input model for runtime context data."""
     runId: str = ""
     parentRunId: str = ""
     conversationId: str = ""
@@ -51,6 +53,7 @@ class RuntimeContextInput(BaseModel):
 
 
 class InvokeInput(BaseModel):
+    """Input model for agent invocation requests."""
     text: str = Field(min_length=1)
     userId: str = ""
     agentId: str = ""
@@ -62,23 +65,27 @@ class InvokeInput(BaseModel):
     @field_validator("text")
     @classmethod
     def text_not_blank(cls, v: str) -> str:
+        """Validate that text is not blank."""
         if not v.strip():
             raise ValueError("text must not be blank")
         return v
 
 
 class InvokeRequest(BaseModel):
+    """Request model for agent invocation."""
     sessionId: str = ""
     input: InvokeInput
 
 
 class InvokeResponse(BaseModel):
+    """Response model for agent invocation."""
     output: dict
 
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
 
 def _parse_configs(req: InvokeRequest) -> tuple[Optional[AgentConfig], Optional[CrewConfig], RuntimeContext]:
+    """Parse configuration and context from an invocation request."""
     inp = req.input
     runtime_context = RuntimeContext(
         run_id=inp.runtimeContext.runId,
@@ -101,11 +108,13 @@ def _parse_configs(req: InvokeRequest) -> tuple[Optional[AgentConfig], Optional[
 
 # ── App ──────────────────────────────────────────────────────────────────────
 
-_svc = AgentService()
+_memory = CoupleMemory(settings.agentcore_memory_id, settings.aws_region)
+_svc = AgentService(memory=_memory)
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    """Manage the lifespan of the FastAPI application."""
     logger.info("AgentCore server ready.")
     yield
     await _svc.shutdown()
@@ -116,17 +125,20 @@ app = FastAPI(lifespan=lifespan)
 
 @app.exception_handler(Exception)
 async def _unhandled_exception(request: Request, exc: Exception) -> JSONResponse:
+    """Handle unhandled exceptions by logging them and returning a 500 response."""
     logger.exception("Unhandled exception on %s %s", request.method, request.url.path)
     return JSONResponse(status_code=500, content={"detail": "Internal server error"})
 
 
 @app.get("/health")
 async def health() -> dict:
+    """Health check endpoint."""
     return {"status": "ok"}
 
 
 @app.post("/invocations")
 async def invocations(request: InvokeRequest) -> InvokeResponse:
+    """Synchronous agent invocation endpoint."""
     trace_id = request.input.runtimeContext.traceId
     _trace_id_var.set(trace_id)
     agent_config, crew_config, runtime_context = _parse_configs(request)
@@ -139,6 +151,8 @@ async def invocations(request: InvokeRequest) -> InvokeResponse:
         result = agent(user_message)
         response_text = str(result)
         logger.info("Session=%s traceId=%s | output=%s", request.sessionId, trace_id, response_text[:120])
+        if is_orchestrator(agent_config):
+            _memory.save_turn(request.input.userId, request.sessionId, user_message, response_text)
         return InvokeResponse(output={"text": response_text})
     except Exception as e:
         logger.exception("Agent invocation failed traceId=%s", trace_id)
@@ -147,6 +161,7 @@ async def invocations(request: InvokeRequest) -> InvokeResponse:
 
 @app.post("/invocations/stream")
 async def invocations_stream(request: InvokeRequest) -> StreamingResponse:
+    """Streaming agent invocation endpoint."""
     trace_id = request.input.runtimeContext.traceId
     _trace_id_var.set(trace_id)
     user_message = request.input.text

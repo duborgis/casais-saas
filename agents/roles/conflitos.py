@@ -65,6 +65,7 @@ def build_conflitos_agent(
     user_id: str = "",
     session_id: str = "",
 ) -> Agent:
+    """Build and return the Conflitos specialist agent."""
     region = os.environ.get("AWS_REGION", "us-east-1")
     model_id = os.environ.get("BEDROCK_MODEL_ID", "us.amazon.nova-pro-v1:0")
 

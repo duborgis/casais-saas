@@ -58,6 +58,7 @@ def build_orchestrator_agent(
     user_id: str = "",
     session_id: str = "",
 ) -> Agent:
+    """Build and return the Orchestrator agent."""
     settings_region = os.environ.get("AWS_REGION", "us-east-1")
     model_id = os.environ.get("BEDROCK_MODEL_ID", "us.amazon.nova-pro-v1:0")
 

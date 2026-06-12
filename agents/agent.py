@@ -32,6 +32,7 @@ def build_agent(
     user_id: str = "",
     session_id: str = "",
 ) -> Any:
+    """Build and return an Agent instance based on the specified role."""
     role = (agent_config.role if agent_config and agent_config.role else _ROLE) or "orchestrator"
 
     module_name = _ROLE_MAP.get(role)
