@@ -11,7 +11,7 @@ RUN pip install --no-cache-dir \
     "pydantic>=2.0.0" \
     "pydantic-settings>=2.0.0"
 
-COPY server.py service.py agent.py config.py a2a.py kb_tool.py ./
+COPY server.py service.py agent.py config.py a2a.py kb_tool.py memory.py ./
 COPY roles/ roles/
 
 ENV PYTHONUNBUFFERED=1
